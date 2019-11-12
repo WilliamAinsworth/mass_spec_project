@@ -27,6 +27,7 @@
 </style>
 
 <body>
+    <h1>Mass Spectrometry Plot</h1>
     <script src="https://d3js.org/d3.v3.min.js"></script>
 
     <script>
@@ -70,7 +71,7 @@
             .style("opacity", 0);
 
         // load data
-        d3.csv("peaks.csv", function (error, data) {
+        d3.csv("motif.csv", function (error, data) {
 
             xScale.domain([d3.min(data, xValue) - 1, d3.max(data, xValue) + 1]);
             yScale.domain([0, d3.max(data, function (d) { return d.y; })]);
@@ -127,6 +128,22 @@
         });
 
     </script>
+
+    <script>
+        function toggleQR() {
+            var x = document.getElementById("qrcode");
+            if (x.style.display === "none") {
+                x.style.display = "block";
+            } else {
+                x.style.display = "none";
+            }
+        }
+    </script>
+    <button onclick="toggleQR()">Toggle QR</button>
+
+    <div id="qrcode">
+        <img src="https://metabolomics-usi.ucsd.edu/qrcode/?usi=mzspec:MOTIFDB:motif:171163"></img>
+    </div>
 </body>
 
 </html>
