@@ -70,6 +70,7 @@
             .attr("class", "tooltip")
             .style("opacity", 0);
 
+        var qrCode = "https://metabolomics-usi.ucsd.edu/qrcode/?usi=mzspec:MOTIFDB:motif:171163"
         // load data
         d3.csv("motif.csv", function (error, data) {
 
@@ -107,15 +108,14 @@
                 .attr("class", "bar")
                 .style("fill", "steelblue")
                 .attr("x", xMap)
-                .attr("width", 2)
+                .attr("width", 1)
                 .attr("y", yMap)
                 .attr("height", function (d) { return height - yScale(d.y); })
                 .on("mouseover", function (d) {
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", .9);
-                    tooltip.html(xValue(d)
-                        + ", " + yValue(d))
+                    tooltip.html(xValue(d))
                         .style("left", (d3.event.pageX + 5) + "px")
                         .style("top", (d3.event.pageY - 28) + "px");
                 })
@@ -124,6 +124,33 @@
                         .duration(500)
                         .style("opacity", 0);
                 });
+
+            // QR code
+            svg.append('image')
+                .attr('xlink:href', "https://metabolomics-usi.ucsd.edu/qrcode/?usi=mzspec:MOTIFDB:motif:171163")
+                .attr("id", "qr")
+                .attr('width', 200)
+                .attr('height', 150)
+                .attr('x', width - 200)
+                .attr('y', height - 450);
+
+            // Add qr code toggle
+            svg.append("text")
+                .attr("x", width - 150)
+                .attr("y", height - 445)
+                .attr("class", "legend")
+                .style("fill", "black")
+                .on("click", function () {
+                    // Determine if current line is visible
+                    var active = qr.active ? false : true,
+                        newOpacity = active ? 0 : 1;
+                    // Hide or show the elements
+                    d3.select("#qr").style("opacity", newOpacity);
+                    // Update whether or not the elements are active
+                    qr.active = active;
+                })
+                .text("Toggle QR Code");
+
 
         });
 
@@ -139,11 +166,14 @@
             }
         }
     </script>
-    <button onclick="toggleQR()">Toggle QR</button>
 
+    <div>
+        <button onclick="toggleQR()">Toggle QR</button>
+    </div>
     <div id="qrcode">
         <img src="https://metabolomics-usi.ucsd.edu/qrcode/?usi=mzspec:MOTIFDB:motif:171163"></img>
     </div>
+    
 </body>
 
 </html>
