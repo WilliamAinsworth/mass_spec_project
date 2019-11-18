@@ -30,6 +30,7 @@
     <h1>Mass Spectrometry Plot</h1>
     <script src="https://d3js.org/d3.v3.min.js"></script>
 
+
     <script>
         var margin = { top: 20, right: 20, bottom: 30, left: 40 },
             width = 960 - margin.left - margin.right,
@@ -70,110 +71,118 @@
             .attr("class", "tooltip")
             .style("opacity", 0);
 
-        var qrCode = "https://metabolomics-usi.ucsd.edu/qrcode/?usi=mzspec:MOTIFDB:motif:171163"
+
+        var extensionCode = "mzspec:MOTIFDB:motif:171163";
+        const baseURL = "https://metabolomics-usi.ucsd.edu/"
         // load data
-        d3.csv("motif.csv", function (error, data) {
 
-            xScale.domain([d3.min(data, xValue) - 1, d3.max(data, xValue) + 1]);
-            yScale.domain([0, d3.max(data, function (d) { return d.y; })]);
+        // https://metabolomics-usi.ucsd.edu/json/?usi=mzspec:GNPSLIBRARY:CCMSLIB00005436077
+        // /csv/?usi=mzspec:MOTIFDB:motif:171163
 
-            // x-axis
-            svg.append("g")
-                .attr("class", "x axis")
-                .attr("transform", "translate(0," + height + ")")
-                .call(xAxis)
-                .append("text")
-                .attr("class", "label")
-                .attr("x", width)
-                .attr("y", -6)
-                .style("text-anchor", "end")
-                .text("m/z");
+        // d3.text("data/testnh.csv", function (r) {
+        //     var result = "x, y, z\n" + r;  //now you have the header
+        //     var data = d3.csv.parse(result);
+        //     //do your plotting with data
+        // }
 
-            // y-axis
-            svg.append("g")
-                .attr("class", "y axis")
-                .call(yAxis)
-                .append("text")
-                .attr("class", "label")
-                .attr("transform", "rotate(-90)")
-                .attr("y", 6)
-                .attr("dy", ".71em")
-                .style("text-anchor", "end")
-                .text("Intensity %");
+        function updatePlot() {
+            
+            var qrCode = baseURL + "qrcode/?usi=" + extensionCode
+            var dataUrl = baseURL + "csv/?usi=" + extensionCode
 
-            // peaks
-            svg.selectAll("bar")
-                .data(data)
-                .enter().append("rect")
-                .attr("class", "bar")
-                .style("fill", "steelblue")
-                .attr("x", xMap)
-                .attr("width", 1)
-                .attr("y", yMap)
-                .attr("height", function (d) { return height - yScale(d.y); })
-                .on("mouseover", function (d) {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(xValue(d))
-                        .style("left", (d3.event.pageX + 5) + "px")
-                        .style("top", (d3.event.pageY - 28) + "px");
-                })
-                .on("mouseout", function (d) {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
+            d3.text("https://cors-anywhere.herokuapp.com/" + dataUrl, function (t) { // have to use d3.text due to csv not comnig in with column headings
+                var headings = "x,y\n" + t;  //now you have the header
+                var data = d3.csv.parse(headings);
+                xScale.domain([d3.min(data, xValue) - 1, d3.max(data, xValue) + 1]);
+                yScale.domain([0, d3.max(data, function (d) { return d.y; })]);
 
-            // QR code
-            svg.append('image')
-                .attr('xlink:href', "https://metabolomics-usi.ucsd.edu/qrcode/?usi=mzspec:MOTIFDB:motif:171163")
-                .attr("id", "qr")
-                .attr('width', 200)
-                .attr('height', 150)
-                .attr('x', width - 200)
-                .attr('y', height - 450);
+                // x-axis
+                svg.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(xAxis)
+                    .append("text")
+                    .attr("class", "label")
+                    .attr("x", width)
+                    .attr("y", -6)
+                    .style("text-anchor", "end")
+                    .text("m/z");
 
-            // Add qr code toggle
-            svg.append("text")
-                .attr("x", width - 150)
-                .attr("y", height - 445)
-                .attr("class", "legend")
-                .style("fill", "black")
-                .on("click", function () {
-                    // Determine if current line is visible
-                    var active = qr.active ? false : true,
-                        newOpacity = active ? 0 : 1;
-                    // Hide or show the elements
-                    d3.select("#qr").style("opacity", newOpacity);
-                    // Update whether or not the elements are active
-                    qr.active = active;
-                })
-                .text("Toggle QR Code");
+                // y-axis
+                svg.append("g")
+                    .attr("class", "y axis")
+                    .call(yAxis)
+                    .append("text")
+                    .attr("class", "label")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 6)
+                    .attr("dy", ".71em")
+                    .style("text-anchor", "end")
+                    .text("Intensity %");
 
+                // peaks
+                svg.selectAll("bar")
+                    .data(data)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .style("fill", "steelblue")
+                    .attr("x", xMap)
+                    .attr("width", 1)
+                    .attr("y", yMap)
+                    .attr("height", function (d) { return height - yScale(d.y); })
+                    .on("mouseover", function (d) {
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        tooltip.html(xValue(d))
+                            .style("left", (d3.event.pageX + 5) + "px")
+                            .style("top", (d3.event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function (d) {
+                        tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                    });
 
-        });
+                // QR code
+                svg.append('image')
+                    .attr('xlink:href', qrCode)
+                    .attr("id", "qr")
+                    .attr('width', 220)
+                    .attr('height', 170)
+                    .attr('x', width - 200)
+                    .attr('y', height - 450);
 
-    </script>
-
-    <script>
-        function toggleQR() {
-            var x = document.getElementById("qrcode");
-            if (x.style.display === "none") {
-                x.style.display = "block";
-            } else {
-                x.style.display = "none";
-            }
+            });
         }
+
+
+        function updateCode() {
+            extensionCode = document.getElementById("libCode").value;
+            console.log("New extension code: " + extensionCode);
+            updatePlot();
+        }
+
+        function toggleQR() {
+            var active = qr.active ? false : true,
+                newOpacity = active ? 0 : 1;
+            // Hide or show the elements
+            d3.select("#qr").style("opacity", newOpacity);
+            // Update whether or not the elements are active
+            qr.active = active;
+        }
+        function init() {
+            updatePlot();
+        }
+
+        init();
+
     </script>
 
-    <div>
-        <button onclick="toggleQR()">Toggle QR</button>
-    </div>
-    <div id="qrcode">
-        <img src="https://metabolomics-usi.ucsd.edu/qrcode/?usi=mzspec:MOTIFDB:motif:171163"></img>
-    </div>
-    
+    <b>Library Code: </b> <input type="text" id="libCode" value="mzspec:MOTIFDB:motif:171163" size="40">
+    <button onclick="updateCode()">Update Code</button>
+    <button onclick="toggleQR()">Toggle QR Code</button>
+
 </body>
 
 </html>
