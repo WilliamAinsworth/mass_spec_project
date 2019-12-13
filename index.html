@@ -20,13 +20,21 @@
         height: 28px;
         pointer-events: none;
     }
+    bar {
+        fill: steelblue;
+    }
+    bar:hover {
+        fill: brown;
+    }
 </style>
 
 <body>
     <h1>Mass Spectrometry Plot</h1>
     <script src="https://d3js.org/d3.v3.min.js"></script>
     <script src="plot.js"></script>
-
+    <br>
+    UpdateCode currently broken due to data source issue.
+    <br>
     <b>Library Code: </b> <input type="text" id="libCode" value="mzspec:MOTIFDB:motif:171163" size="40">
     <button onclick="updateCode()">Update Code</button>
     <button onclick="toggleQR()">Toggle QR Code</button>

@@ -1,6 +1,6 @@
 var margin = { top: 20, right: 20, bottom: 30, left: 40 },
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+    width = 1400 - margin.left - margin.right,
+    height = 700 - margin.top - margin.bottom;
 
 /* 
  * value accessor - returns the value to encode for a given data object.
@@ -42,23 +42,18 @@ var extensionCode = "mzspec:MOTIFDB:motif:171163";
 const baseURL = "https://metabolomics-usi.ucsd.edu/"
 // load data
 
-// https://metabolomics-usi.ucsd.edu/json/?usi=mzspec:GNPSLIBRARY:CCMSLIB00005436077
-// /csv/?usi=mzspec:MOTIFDB:motif:171163
-
-// d3.text("data/testnh.csv", function (r) {
-//     var result = "x, y, z\n" + r;  //now you have the header
-//     var data = d3.csv.parse(result);
-//     //do your plotting with data
-// }
+function clearPlot() {
+    d3.selectAll("svg > *").remove();
+}
 
 function updatePlot() {
     
     var qrCode = baseURL + "qrcode/?usi=" + extensionCode
     var dataUrl = baseURL + "csv/?usi=" + extensionCode
 
-    d3.text("https://cors-anywhere.herokuapp.com/" + dataUrl, function (t) { // have to use d3.text due to csv not comnig in with column headings
-        var headings = "x,y\n" + t;  //now you have the header
-        var data = d3.csv.parse(headings);
+    d3.text("peaks.csv", function (t) { // have to use d3.text due to csv not coming in with column headings
+        //var headings = "x,y\n" + t;  //now you have the header
+        var data = d3.csv.parse(t);
         xScale.domain([d3.min(data, xValue) - 1, d3.max(data, xValue) + 1]);
         yScale.domain([0, d3.max(data, function (d) { return d.y; })]);
 
@@ -87,13 +82,14 @@ function updatePlot() {
             .text("Intensity %");
 
         // peaks
+        // svg.selectAll("bar").remove();
         svg.selectAll("bar")
             .data(data)
             .enter().append("rect")
             .attr("class", "bar")
             .style("fill", "steelblue")
             .attr("x", xMap)
-            .attr("width", 1)
+            .attr("width", 1.5)
             .attr("y", yMap)
             .attr("height", function (d) { return height - yScale(d.y); })
             .on("mouseover", function (d) {
@@ -108,16 +104,26 @@ function updatePlot() {
                 tooltip.transition()
                     .duration(500)
                     .style("opacity", 0);
-            });
+            })
+            // .on("click", function (d) {
+            //     // Determine if current line is visible
+            //     tooltip.transition()
+            //     .duration(500)
+            //     .style("opacity", 1);
+            //     tooltip.html(xValue(d))
+            //     .style("left", (d3.event.pageX + 5) + "px")
+            //     .style("top", (d3.event.pageY - 28) + "px");
+
+            // });
 
         // QR code
         svg.append('image')
             .attr('xlink:href', qrCode)
             .attr("id", "qr")
             .attr('width', 220)
-            .attr('height', 170)
-            .attr('x', width - 200)
-            .attr('y', height - 450);
+            .attr('height', 250)
+            .attr('x', width - 300)
+            .attr('y', height - 650);
 
     });
 }
@@ -126,6 +132,7 @@ function updatePlot() {
 function updateCode() {
     extensionCode = document.getElementById("libCode").value;
     console.log("New extension code: " + extensionCode);
+    
     updatePlot();
 }
 
