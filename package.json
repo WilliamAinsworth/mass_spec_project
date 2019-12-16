@@ -1,0 +1,7 @@
+{
+    "name": "masspec",
+    "version": "1.0.0",
+    "dependencies": {
+       "d3": "5.14.2"
+    }
+  }
