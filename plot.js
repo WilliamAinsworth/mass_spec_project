@@ -1,5 +1,3 @@
-//import * as d3 from "./libraries/d3/d3";
-
 var margin = { top: 20, right: 20, bottom: 50, left: 70 },
     width = 1400 - margin.left - margin.right,
     height = 700 - margin.top - margin.bottom;
