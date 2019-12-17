@@ -1,6 +1,6 @@
-import * as d3 from "./libraries/d3/d3";
+//import * as d3 from "./libraries/d3/d3";
 
-var margin = { top: 20, right: 20, bottom: 30, left: 40 },
+var margin = { top: 20, right: 20, bottom: 50, left: 70 },
     width = 1400 - margin.left - margin.right,
     height = 700 - margin.top - margin.bottom;
 
@@ -36,7 +36,6 @@ var tooltip = d3.select("body").append("div")
 
 var extensionCode = "mzspec:MOTIFDB:motif:171163";
 const baseURL = "https://metabolomics-usi.ucsd.edu/"
-// load data
 
 function clearPlot() {
     d3.selectAll("svg > *").remove();
@@ -45,38 +44,40 @@ function clearPlot() {
 function updatePlot() {
     var qrCode = baseURL + "qrcode/?usi=" + extensionCode;
     var dataUrl = baseURL + "csv/?usi=" + extensionCode;
-    
+
     d3.csv("peaks.csv")
-        .then(function(data) {
+        .then(function (data) {
             xScale.domain([d3.min(data, xValue) - 1, d3.max(data, xValue) + 1]);
             yScale.domain([0, d3.max(data, function (d) { return d.y; })]);
-    
+
             // x-axis
             svg.append("g")
                 .attr("class", "x axis")
                 .attr("transform", "translate(0," + height + ")")
-                .call(xAxis)
-                .append("text")
-                .attr("class", "label")
-                .attr("x", width)
-                .attr("y", -6)
-                .style("text-anchor", "end")
+                .call(xAxis);
+
+            // text label for the x axis
+            svg.append("text")
+                .attr("transform",
+                    "translate(" + (width / 2) + " ," +(height + margin.top + 20) + ")")
+                .style("text-anchor", "middle")
                 .text("m/z");
-    
+
             // y-axis
             svg.append("g")
                 .attr("class", "y axis")
-                .call(yAxis)
-                .append("text")
-                .attr("class", "label")
+                .call(yAxis);
+
+            // text label for the y axis
+            svg.append("text")
                 .attr("transform", "rotate(-90)")
-                .attr("y", 6)
-                .attr("dy", ".71em")
-                .style("text-anchor", "end")
+                .attr("y", 0 - margin.left)
+                .attr("x", 0 - (height / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
                 .text("Intensity %");
-    
+
             // peaks
-            // svg.selectAll("bar").remove();
             svg.selectAll("bar")
                 .data(data)
                 .enter().append("rect")
@@ -98,7 +99,7 @@ function updatePlot() {
                     tooltip.transition()
                         .duration(500)
                         .style("opacity", 0);
-                })
+                });
                 // .on("click", function (d) {
                 //     // Determine if current line is visible
                 //     tooltip.transition()
@@ -107,9 +108,8 @@ function updatePlot() {
                 //     tooltip.html(xValue(d))
                 //     .style("left", (d3.event.pageX + 5) + "px")
                 //     .style("top", (d3.event.pageY - 28) + "px");
-    
                 // });
-    
+
             // QR code
             svg.append('image')
                 .attr('xlink:href', qrCode)
@@ -120,7 +120,7 @@ function updatePlot() {
                 .attr('y', height - 650);
 
         })
-        .catch(function(error){
+        .catch(function (error) {
             console.log(error);
             //handle error
         });
@@ -130,7 +130,7 @@ function updatePlot() {
 function updateCode() {
     extensionCode = document.getElementById("libCode").value;
     console.log("New extension code: " + extensionCode);
-    
+
     updatePlot();
 }
 
