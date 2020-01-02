@@ -14,11 +14,12 @@ var xValue = function (d) { return d.x; }, // data -> value
     xScale = d3.scaleLinear().range([0, width]), // value -> display
     xMap = function (d) { return xScale(xValue(d)); }, // data -> display
     xAxis = d3.axisBottom(xScale);
+
 // setup y
 var yValue = function (d) { return d.y; }, // data -> value
     yScale = d3.scaleLinear().range([height, 0]), // value -> display
-    yMap = function (d) { return yScale(yValue(d)); }, // data -> display
-    yAxis = d3.axisLeft(yScale);
+    yMap = function (d) { return yScale((yValue(d))); }, // data -> display
+    yAxis = d3.axisLeft(yScale).ticks(10);
 
 // add the graph canvas to the body of the webpage
 var svg = d3.select("body").append("svg")
@@ -39,32 +40,41 @@ function clearPlot() {
     d3.selectAll("svg > *").remove();
 }
 
+
 function updatePlot() {
     var qrCode = baseURL + "qrcode/?usi=" + extensionCode;
     var dataUrl = baseURL + "csv/?usi=" + extensionCode;
 
     d3.csv("peaks.csv")
         .then(function (data) {
-            xScale.domain([d3.min(data, xValue) - 1, d3.max(data, xValue) + 1]);
-            yScale.domain([0, d3.max(data, function (d) { return d.y; })]);
 
+            var maxY = d3.max(data, yValue)
+            var normalise = d3.scaleLinear().domain([0, maxY]).range([0, 1]);
+            data.forEach( function(d) {
+                d.y = normalise(d.y);
+            })
+            
+            xScale.domain([d3.min(data, xValue) - 1, d3.max(data, xValue) + 1]);
+            yScale.domain([0, d3.max(data, yValue)]);
+            
+            console.log(data);
             // x-axis
             svg.append("g")
                 .attr("class", "x axis")
                 .attr("transform", "translate(0," + height + ")")
-                .call(xAxis);
+                .call(xAxis.ticks(20));
 
             // text label for the x axis
             svg.append("text")
                 .attr("transform",
-                    "translate(" + (width / 2) + " ," +(height + margin.top + 20) + ")")
+                    "translate(" + (width / 2) + " ," + (height + margin.top + 20) + ")")
                 .style("text-anchor", "middle")
                 .text("m/z");
 
             // y-axis
             svg.append("g")
                 .attr("class", "y axis")
-                .call(yAxis);
+                .call(yAxis.ticks(20, "%"));
 
             // text label for the y axis
             svg.append("text")
@@ -80,9 +90,8 @@ function updatePlot() {
                 .data(data)
                 .enter().append("rect")
                 .attr("class", "bar")
-                .style("fill", "steelblue")
                 .attr("x", xMap)
-                .attr("width", 1.5)
+                .attr("width", 2)
                 .attr("y", yMap)
                 .attr("height", function (d) { return height - yScale(d.y); })
                 .on("mouseover", function (d) {
@@ -98,15 +107,15 @@ function updatePlot() {
                         .duration(500)
                         .style("opacity", 0);
                 });
-                // .on("click", function (d) {
-                //     // Determine if current line is visible
-                //     tooltip.transition()
-                //     .duration(500)
-                //     .style("opacity", 1);
-                //     tooltip.html(xValue(d))
-                //     .style("left", (d3.event.pageX + 5) + "px")
-                //     .style("top", (d3.event.pageY - 28) + "px");
-                // });
+            // .on("click", function (d) {
+            //     // Determine if current line is visible
+            //     tooltip.transition()
+            //     .duration(500)
+            //     .style("opacity", 1);
+            //     tooltip.html(xValue(d))
+            //     .style("left", (d3.event.pageX + 5) + "px")
+            //     .style("top", (d3.event.pageY - 28) + "px");
+            // });
 
             // QR code
             svg.append('image')
