@@ -106,16 +106,10 @@ function updatePlot() {
                     tooltip.transition()
                         .duration(500)
                         .style("opacity", 0);
+                })
+                .on("click", function (d) {
+                    d3.select(this).style("fill", "red");
                 });
-            // .on("click", function (d) {
-            //     // Determine if current line is visible
-            //     tooltip.transition()
-            //     .duration(500)
-            //     .style("opacity", 1);
-            //     tooltip.html(xValue(d))
-            //     .style("left", (d3.event.pageX + 5) + "px")
-            //     .style("top", (d3.event.pageY - 28) + "px");
-            // });
 
             // QR code
             svg.append('image')
@@ -133,6 +127,9 @@ function updatePlot() {
         });
 }
 
+function clearSelections() {
+    updatePlot();
+}
 
 function updateCode() {
     extensionCode = document.getElementById("libCode").value;
