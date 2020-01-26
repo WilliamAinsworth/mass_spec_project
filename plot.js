@@ -2,6 +2,8 @@ var margin = { top: 20, right: 20, bottom: 50, left: 70 },
     width = 1400 - margin.left - margin.right,
     height = 700 - margin.top - margin.bottom;
 
+var gridlines = true;
+
 /* 
  * value accessor - returns the value to encode for a given data object.
  * scale - maps value to a visual display encoding, such as a pixel position.
@@ -40,6 +42,16 @@ function clearPlot() {
     d3.selectAll("svg > *").remove();
 }
 
+// gridlines in x axis function
+function make_x_gridlines() {
+    return d3.axisBottom(xScale).ticks(10);
+}
+
+// gridlines in y axis function
+function make_y_gridlines() {
+    return d3.axisLeft(yScale).ticks(10);
+}
+
 
 function updatePlot() {
     var qrCode = baseURL + "qrcode/?usi=" + extensionCode;
@@ -50,13 +62,13 @@ function updatePlot() {
 
             var maxY = d3.max(data, yValue)
             var normalise = d3.scaleLinear().domain([0, maxY]).range([0, 1]);
-            data.forEach( function(d) {
+            data.forEach(function (d) {
                 d.y = normalise(d.y);
             })
-            
+
             xScale.domain([d3.min(data, xValue) - 1, d3.max(data, xValue) + 1]);
             yScale.domain([0, d3.max(data, yValue)]);
-            
+
             console.log(data);
             // x-axis
             svg.append("g")
@@ -84,6 +96,8 @@ function updatePlot() {
                 .attr("dy", "1em")
                 .style("text-anchor", "middle")
                 .text("Intensity %");
+
+
 
             // peaks
             svg.selectAll("bar")
@@ -136,6 +150,42 @@ function updateCode() {
     console.log("New extension code: " + extensionCode);
 
     updatePlot();
+}
+
+function toggleGrid() {
+    //gridlines = !gridlines;
+    //d3.selectAll(".grid").remove();
+    //updatePlot();
+
+    var grid = d3.selectAll(".grid");
+
+    if (grid.empty()) { // grid exists then remove
+        createGrid();
+        d3.selectAll(".grid").lower();
+    } else {
+        grid.remove();
+    }
+}
+
+function createGrid() {
+    // add the X gridlines
+    svg.append("g")
+        .attr("class", "grid")
+        .attr("id", "xGrid")
+        .attr("transform", "translate(0," + height + ")")
+        .call(make_x_gridlines()
+            .tickSize(-height)
+            .tickFormat("")
+        );
+
+    // add the Y gridlines
+    svg.append("g")
+        .attr("class", "grid")
+        .attr("id", "yGrid")
+        .call(make_y_gridlines()
+            .tickSize(-width)
+            .tickFormat("")
+        );
 }
 
 function toggleQR() {
