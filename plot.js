@@ -1,3 +1,5 @@
+//import * as d3 from "./libraries/d3/d3";
+
 var margin = { top: 20, right: 20, bottom: 50, left: 70 },
     width = 1400 - margin.left - margin.right,
     height = 700 - margin.top - margin.bottom;
@@ -37,6 +39,10 @@ var tooltip = d3.select("body").append("div")
 
 var extensionCode = "mzspec:MOTIFDB:motif:171163";
 const baseURL = "https://metabolomics-usi.ucsd.edu/"
+const qrPrefix = "https://api.qrserver.com/v1/create-qr-code/?data="
+var qrX = 150;
+    qrY = 150;
+const qrSuffix = "&amp;size=" + qrX + "x" + qrY
 
 function clearPlot() {
     d3.selectAll("svg > *").remove();
@@ -54,7 +60,7 @@ function make_y_gridlines() {
 
 
 function updatePlot() {
-    var qrCode = baseURL + "qrcode/?usi=" + extensionCode;
+    var qrCode = qrPrefix + baseURL + "qrcode/?usi=" + extensionCode + qrSuffix;
     var dataUrl = baseURL + "csv/?usi=" + extensionCode;
 
     d3.csv("peaks.csv")
@@ -97,8 +103,6 @@ function updatePlot() {
                 .style("text-anchor", "middle")
                 .text("Intensity %");
 
-
-
             // peaks
             svg.selectAll("bar")
                 .data(data)
@@ -129,10 +133,10 @@ function updatePlot() {
             svg.append('image')
                 .attr('xlink:href', qrCode)
                 .attr("id", "qr")
-                .attr('width', 220)
-                .attr('height', 250)
+                .attr('width', 150)
+                .attr('height', 150)
                 .attr('x', width - 300)
-                .attr('y', height - 650);
+                .attr('y', height - 600);
 
         })
         .catch(function (error) {
@@ -140,7 +144,6 @@ function updatePlot() {
             //handle error
         });
 }
-
 function clearSelections() {
     updatePlot();
 }
