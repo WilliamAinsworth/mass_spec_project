@@ -40,12 +40,23 @@ var tooltip = d3.select("body").append("div")
 var extensionCode = "mzspec:MOTIFDB:motif:171163";
 const baseURL = "https://metabolomics-usi.ucsd.edu/"
 const qrPrefix = "https://api.qrserver.com/v1/create-qr-code/?data="
+const corsPrefix = "https://cors-anywhere.herokuapp.com/"
 var qrX = 150;
-    qrY = 150;
+qrY = 150;
 const qrSuffix = "&amp;size=" + qrX + "x" + qrY
 
+var qrCode = qrPrefix + baseURL + "qrcode/?usi=" + extensionCode + qrSuffix;
+var dataUrl = baseURL + "csv/?usi=" + extensionCode;
+
+function updateQrUrl() {
+    qrCode =  qrPrefix + baseURL + "qrcode/?usi=" + extensionCode + qrSuffix;
+}
+function updateDataUrl() {
+    dataUrl = baseURL + "csv/?usi=" + extensionCode;
+}
+
 function clearPlot() {
-    d3.selectAll("svg > *").remove();
+    d3.selectAll("g > *").remove();
 }
 
 // gridlines in x axis function
@@ -58,108 +69,140 @@ function make_y_gridlines() {
     return d3.axisLeft(yScale).ticks(10);
 }
 
+var peakArray = []
 
-function updatePlot() {
-    var qrCode = qrPrefix + baseURL + "qrcode/?usi=" + extensionCode + qrSuffix;
-    var dataUrl = baseURL + "csv/?usi=" + extensionCode;
+function  configureData(entry) {
+    peakArray.push( {"x": entry[0], "y":entry[1]} ) ; 
+  }
 
-    d3.csv("peaks.csv")
-        .then(function (data) {
+function getData(input) {
+    switch (typeof (input)) {
+        case "object":
+            //input.precursor_mz
+            input.peaks.forEach(configureData);
+            createPlot(peakArray);
+            break;
 
-            var maxY = d3.max(data, yValue)
-            var normalise = d3.scaleLinear().domain([0, maxY]).range([0, 1]);
-            data.forEach(function (d) {
-                d.y = normalise(d.y);
-            })
+        case "string":
+            var filetype = input.split('.').pop();
+            if (filetype == "csv") {
 
-            xScale.domain([d3.min(data, xValue) - 1, d3.max(data, xValue) + 1]);
-            yScale.domain([0, d3.max(data, yValue)]);
-
-            console.log(data);
-            // x-axis
-            svg.append("g")
-                .attr("class", "x axis")
-                .attr("transform", "translate(0," + height + ")")
-                .call(xAxis.ticks(20));
-
-            // text label for the x axis
-            svg.append("text")
-                .attr("transform",
-                    "translate(" + (width / 2) + " ," + (height + margin.top + 20) + ")")
-                .style("text-anchor", "middle")
-                .text("m/z");
-
-            // y-axis
-            svg.append("g")
-                .attr("class", "y axis")
-                .call(yAxis.ticks(20, "%"));
-
-            // text label for the y axis
-            svg.append("text")
-                .attr("transform", "rotate(-90)")
-                .attr("y", 0 - margin.left)
-                .attr("x", 0 - (height / 2))
-                .attr("dy", "1em")
-                .style("text-anchor", "middle")
-                .text("Intensity %");
-
-            // peaks
-            svg.selectAll("bar")
-                .data(data)
-                .enter().append("rect")
-                .attr("class", "bar")
-                .attr("x", xMap)
-                .attr("width", 2)
-                .attr("y", yMap)
-                .attr("height", function (d) { return height - yScale(d.y); })
-                .on("mouseover", function (d) {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(xValue(d))
-                        .style("left", (d3.event.pageX + 5) + "px")
-                        .style("top", (d3.event.pageY - 28) + "px");
+                d3.csv(input)
+                .then(function (data) {
+                    peakArray = data;
+                    createPlot(data);
                 })
-                .on("mouseout", function (d) {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                })
-                .on("click", function (d) {
-                    d3.select(this).style("fill", "red");
+                .catch(function (error) {
+                    console.log(error);
                 });
 
-            // QR code
-            svg.append('image')
-                .attr('xlink:href', qrCode)
-                .attr("id", "qr")
-                .attr('width', 150)
-                .attr('height', 150)
-                .attr('x', width - 300)
-                .attr('y', height - 600);
+            } else if (filetype == "json"){
+                
+                d3.json(input)
+                .then(function (data) {
+                    getData(data);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+            }
+            break;
 
-        })
-        .catch(function (error) {
-            console.log(error);
-            //handle error
-        });
+        default:
+            console.log("Error in getting data")
+    }
 }
+
+function createPlot(data) {
+
+    var maxY = d3.max(data, yValue)
+    var normalise = d3.scaleLinear().domain([0, maxY]).range([0, 1]);
+    data.forEach(function (d) {
+        d.y = normalise(d.y);
+    })
+
+    xScale.domain([d3.min(data, xValue) - 1, d3.max(data, xValue) + 1]);
+    yScale.domain([0, d3.max(data, yValue)]);
+
+    console.log(data);
+    // x-axis
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis.ticks(20));
+
+    // text label for the x axis
+    svg.append("text")
+        .attr("transform",
+            "translate(" + (width / 2) + " ," + (height + margin.top + 20) + ")")
+        .style("text-anchor", "middle")
+        .text("m/z");
+
+    // y-axis
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis.ticks(20, "%"));
+
+    // text label for the y axis
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left)
+        .attr("x", 0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Intensity %");
+
+    // peaks
+    svg.selectAll("bar")
+        .data(data)
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", xMap)
+        .attr("width", 2)
+        .attr("y", yMap)
+        .attr("height", function (d) { return height - yScale(d.y); })
+        .on("mouseover", function (d) {
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+            tooltip.html(xValue(d))
+                .style("left", (d3.event.pageX + 5) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+        })
+        .on("mouseout", function (d) {
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        })
+        .on("click", function (d) {
+            d3.select(this).style("fill", "red");
+        });
+
+    // QR code
+    svg.append('image')
+        .attr('xlink:href', qrCode)
+        .attr("id", "qr")
+        .attr('width', 150)
+        .attr('height', 150)
+        .attr('x', width - 300)
+        .attr('y', height - 600);
+
+}
+
 function clearSelections() {
-    updatePlot();
+    clearPlot();
+    createPlot(peakArray);
 }
 
 function updateCode() {
     extensionCode = document.getElementById("libCode").value;
     console.log("New extension code: " + extensionCode);
+    clearPlot();
+    getData()
 
-    updatePlot();
 }
 
 function toggleGrid() {
-    //gridlines = !gridlines;
-    //d3.selectAll(".grid").remove();
-    //updatePlot();
-
     var grid = d3.selectAll(".grid");
 
     if (grid.empty()) { // grid exists then remove
@@ -199,8 +242,9 @@ function toggleQR() {
     // Update whether or not the elements are active
     qr.active = active;
 }
+
 function init() {
-    updatePlot();
+    getData("peaks.json");
 }
 
 init();
